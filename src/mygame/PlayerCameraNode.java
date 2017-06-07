@@ -28,14 +28,14 @@ public class PlayerCameraNode extends Node{
     private Vector3f walkDirection = new Vector3f(0, 0, 0);
     private Vector3f viewDirection = new Vector3f(0, 0, 0);
     private float airTime;
-    
+
     public PlayerCameraNode(String name,AssetManager assetManager, BulletAppState bulletAppState, Camera cam) {
         super(name);
         
     
   
         Node oto = (Node) assetManager.loadModel("Models/Oto/Oto.mesh.xml");
-        setLocalTranslation(0, 5, 0);
+        oto.setLocalTranslation(0, 5, 0);
         scale(0.25f);
         setLocalTranslation(0, 5, 0);
         attachChild(oto);
@@ -52,7 +52,7 @@ public class PlayerCameraNode extends Node{
         
         CameraNode camNode = new CameraNode("CamNode", cam);
         camNode.setControlDir(CameraControl.ControlDirection.SpatialToCamera);
-        camNode.setLocalTranslation(new Vector3f(0, 15,-30));
+        camNode.setLocalTranslation(new Vector3f(0, 20,-30));
         camNode.lookAt(this.getLocalTranslation(), Vector3f.UNIT_Y);
         
         
@@ -60,6 +60,7 @@ public class PlayerCameraNode extends Node{
 
 
    }
+
     
     public Vector3f getWalkDirection() {
         return walkDirection;
@@ -126,5 +127,4 @@ public class PlayerCameraNode extends Node{
  
         upDateAnimationPlayer();
     }
-
 }
