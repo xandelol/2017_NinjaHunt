@@ -6,6 +6,7 @@ import com.jme3.bounding.BoundingBox;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.PhysicsCollisionEvent;
 import com.jme3.bullet.collision.PhysicsCollisionListener;
+import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.input.KeyInput;
@@ -18,6 +19,7 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.RenderManager;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import java.util.List;
@@ -42,6 +44,7 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
     private boolean up = false, down = false, left = false, right = false;
     private Material boxMatColosion;
     private List<Geometry> cubos;
+    private Ninja ninja;
 
     @Override
     public void simpleInitApp() {
@@ -53,7 +56,7 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
         createCity();
         
         
-        criaCubos();
+        criaNinjas();
         
         boxMatColosion = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md"); 
         boxMatColosion.setBoolean("UseMaterialColors", true);
@@ -72,6 +75,7 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
     public void simpleUpdate(float tpf) {
         //TODO: add update code
         player.upDateKeys(tpf, up, down, left, right);
+        ninja.upDateAnimationPlayer();
     }
 
     @Override
@@ -147,23 +151,9 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
         rootNode.addLight(ambient);
     }
     
-    private void createCubo(float x, float y, float z, float t) {
-        /* A colored lit cube. Needs light source! */
-        Box boxMesh = new Box(t*1f, t*1f, t*1f);
-        Geometry boxGeo = new Geometry("Box", boxMesh);
-        Material boxMat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-        boxMat.setBoolean("UseMaterialColors", true);
-        boxMat.setColor("Ambient", ColorRGBA.Green);
-        boxMat.setColor("Diffuse", ColorRGBA.Green);
-        boxGeo.setMaterial(boxMat);
-        boxGeo.setLocalTranslation(x,y,z);
-        rootNode.attachChild(boxGeo);
-        
-
-
-        RigidBodyControl boxPhysicsNode = new RigidBodyControl(1);
-        boxGeo.addControl(boxPhysicsNode);
-        bulletAppState.getPhysicsSpace().add(boxPhysicsNode);
+    private void createNinja(float x, float y, float z) {
+          ninja = new Ninja("ninja", assetManager, bulletAppState, x, y, z);
+          rootNode.attachChild(ninja);
 
     }
     
@@ -194,14 +184,16 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
 
         if(event.getNodeA().getName().equals("player") || event.getNodeA().getName().equals("player")){
         
-            if(event.getNodeA().getName().equals("Box")){
+            if(event.getNodeA().getName().equals("ninja")){
                   Spatial s = event.getNodeA();             
-                  menorCubo(s);
+                  rootNode.detachChild(s);
+                  bulletAppState.getPhysicsSpace().removeAll(s);
             }
             else
-            if(event.getNodeB().getName().equals("Box")){
+            if(event.getNodeB().getName().equals("ninja")){
                   Spatial s = event.getNodeB();
-                  menorCubo(s);
+                  rootNode.detachChild(s);
+                  bulletAppState.getPhysicsSpace().removeAll(s);
             }
             
         }
@@ -239,7 +231,7 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
             rootNode.detachChild(cb);
             bulletAppState.getPhysicsSpace().removeAll(cb);
             if (rootNode.getChild("Box") == null) {
-                criaCubos();
+                criaNinjas();
             }
         }
         else{
@@ -248,10 +240,10 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
         
     }
     
-    public void criaCubos(){
+    public void criaNinjas(){
         Random r = new Random();
         for(int i=0; i < 10; i++){
-            createCubo(r.nextInt(32), 3, r.nextInt(32), (i+1)*0.25f);
+            createNinja(r.nextInt(32), 3, r.nextInt(32));
         }
     }
 }
