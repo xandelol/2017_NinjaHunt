@@ -1,5 +1,8 @@
 package mygame;
 
+import com.jme3.animation.AnimChannel;
+import com.jme3.animation.AnimControl;
+import com.jme3.animation.AnimEventListener;
 import com.jme3.app.SimpleApplication;
 import com.jme3.asset.plugins.ZipLocator;
 import com.jme3.bounding.BoundingBox;
@@ -22,6 +25,7 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 /**
@@ -29,7 +33,7 @@ import java.util.Random;
  * Move your Logic into AppStates or Controls
  * @author normenhansen
  */
-public class Main extends SimpleApplication implements ActionListener, PhysicsCollisionListener{
+public class Main extends SimpleApplication implements ActionListener, PhysicsCollisionListener, AnimEventListener{
 
     private static Main app = null;
     
@@ -44,18 +48,16 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
     private boolean up = false, down = false, left = false, right = false;
     private Material boxMatColosion;
     private List<Geometry> cubos;
-    private Ninja ninja;
+    private List<Ninja> ninjas;
 
     @Override
     public void simpleInitApp() {
         bulletAppState = new BulletAppState();
         stateManager.attach(bulletAppState);
-        
+        ninjas = new ArrayList();
 
         createLigth();
         createCity();
-        
-        
         criaNinjas();
         
         boxMatColosion = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md"); 
@@ -74,8 +76,15 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
     @Override
     public void simpleUpdate(float tpf) {
         //TODO: add update code
+        
+        for(Ninja n : ninjas){
+            Vector3f position = n.getLocal();
+            position.setZ(position.getZ() + (float) ninjas.size()/10000);
+            n.setLocalTranslation(position);
+        }
+        
         player.upDateKeys(tpf, up, down, left, right);
-        ninja.upDateAnimationPlayer();
+        
     }
 
     @Override
@@ -152,7 +161,8 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
     }
     
     private void createNinja(float x, float y, float z) {
-          ninja = new Ninja("ninja", assetManager, bulletAppState, x, y, z);
+          Ninja ninja = new Ninja("ninja", assetManager, bulletAppState, x, y, z);
+          ninjas.add(ninja);
           rootNode.attachChild(ninja);
 
     }
@@ -199,51 +209,21 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
         }
         
     }
-    
-    private void menorCubo(Spatial cb){
         
-        Vector3f menor = null;
-        Geometry geo = null;
-        BoundingBox box = null;
-        float xb = 0.0f;
-        float tcb = 0.0f;
-        boolean menorCubo = true;
-        
-        geo = (Geometry) cb;
-        box = (BoundingBox) geo.getModelBound();
-        tcb = box.getExtent(menor).x;
-        
-        
-        for (Spatial r : rootNode.getChildren()) {
-            if (r.getName().equals("Box")) {
-                geo = (Geometry) r;
-                box = (BoundingBox) geo.getModelBound();
-                xb = box.getExtent(menor).x;
-                
-                if (xb < tcb) {
-                    menorCubo = false;
-                }
-
-            }
-        }
-        
-        if (menorCubo) {
-            rootNode.detachChild(cb);
-            bulletAppState.getPhysicsSpace().removeAll(cb);
-            if (rootNode.getChild("Box") == null) {
-                criaNinjas();
-            }
-        }
-        else{
-            cb.setMaterial(boxMatColosion);
-        }
-        
-    }
-    
     public void criaNinjas(){
         Random r = new Random();
         for(int i=0; i < 10; i++){
             createNinja(r.nextInt(32), 3, r.nextInt(32));
         }
+    }
+
+    @Override
+    public void onAnimCycleDone(AnimControl control, AnimChannel channel, String animName) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void onAnimChange(AnimControl control, AnimChannel channel, String animName) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
