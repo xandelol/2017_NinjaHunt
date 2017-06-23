@@ -48,7 +48,7 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
     private boolean up = false, down = false, left = false, right = false;
     private Material boxMatColosion;
     private List<Geometry> cubos;
-    private List<Ninja> ninjas;
+    private List<NinjaObject> ninjas;
 
     @Override
     public void simpleInitApp() {
@@ -58,7 +58,7 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
 
         createLigth();
         createCity();
-        criaNinjas();
+        
         
         boxMatColosion = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md"); 
         boxMatColosion.setBoolean("UseMaterialColors", true);
@@ -68,6 +68,8 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
         
         createPlayer();
         initKeys();
+        
+        criaNinjas();
 
         bulletAppState.setDebugEnabled(true);
         bulletAppState.getPhysicsSpace().addCollisionListener(this);
@@ -75,16 +77,15 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
 
     @Override
     public void simpleUpdate(float tpf) {
-        //TODO: add update code
-        
-        for(Ninja n : ninjas){
-            Vector3f position = n.getLocal();
-            position.setZ(position.getZ() + (float) ninjas.size()/10000);
-            n.setLocalTranslation(position);
-        }
-        
+        //TODO: add update code    
         player.upDateKeys(tpf, up, down, left, right);
         
+                
+        for(NinjaObject n : ninjas){
+            Vector3f position = n.getNinja().getLocalTranslation();
+            position.setZ(position.getZ() + (float) ninjas.size()/10000);
+            n.getNinja().setLocalTranslation(position);
+        }
     }
 
     @Override
@@ -161,10 +162,13 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
     }
     
     private void createNinja(float x, float y, float z) {
-          Ninja ninja = new Ninja("ninja", assetManager, bulletAppState, x, y, z);
-          ninjas.add(ninja);
-          rootNode.attachChild(ninja);
-
+        NinjaObject nObj = new NinjaObject();
+        Ninja ninja = new Ninja("ninja", assetManager, bulletAppState, x, y, z);
+        nObj.setNinja(ninja);
+        nObj.setChannel(ninja.getAnimationChannel());
+        nObj.setControl(ninja.getAnimationControl());
+        ninjas.add(nObj);
+        rootNode.attachChild(ninja);
     }
     
     private void createCity() {
@@ -219,11 +223,11 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
 
     @Override
     public void onAnimCycleDone(AnimControl control, AnimChannel channel, String animName) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        //
     }
 
     @Override
     public void onAnimChange(AnimControl control, AnimChannel channel, String animName) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        //
     }
 }

@@ -24,11 +24,9 @@ import com.jme3.scene.Spatial;
  */
 public class Ninja extends Node implements AnimEventListener {
     private final BetterCharacterControl physicsCharacter;
-    private final AnimControl animationControl;
-    private final AnimChannel animationChannel;
+    private AnimControl animationControl;
+    private AnimChannel animationChannel;
     private Vector3f walkDirection = new Vector3f(0, 0, 0);
-    private Vector3f viewDirection = new Vector3f(0, 0, 0);
-    private Vector3f local = new Vector3f(0, 0, 0);
     private float airTime;
     private float rot = 0;
     
@@ -37,9 +35,9 @@ public class Ninja extends Node implements AnimEventListener {
         rot = y*x*z;
         Node ninja = (Node) assetManager.loadModel("Models/Ninja/Ninja.mesh.xml");
         ninja.setLocalTranslation(x, y, z);
-        ninja.rotate(0.0f, -rot, 0.0f);
-        ninja.scale(0.012f);
-        ninja.setLocalTranslation(x, y, z);
+        rotate(0.0f, -rot, 0.0f);
+        scale(0.012f);
+        setLocalTranslation(x, y, z);
         
         attachChild(ninja);
         
@@ -60,6 +58,14 @@ public class Ninja extends Node implements AnimEventListener {
         
     }
     
+    public Vector3f getWalkDirection() {
+        return walkDirection;
+    }
+
+    public void setWalkDirection(Vector3f walkDirection) {
+        this.walkDirection = walkDirection;
+    }
+    
 //    public void simpleUpdate(float tpf) {
 //        //TODO: add update code
 //        Vector3f position = getLocalTranslation();
@@ -77,11 +83,19 @@ public class Ninja extends Node implements AnimEventListener {
         //
     }
     
-    public Vector3f getLocal(){
-        return local;
+    public AnimChannel getAnimationChannel(){
+        return animationChannel;
     }
     
-    public void setLocal(Vector3f local){
-        this.local = local;
+    public void setAnimationChannel(AnimChannel animationChannel){
+        this.animationChannel = animationChannel;
+    }
+    
+    public AnimControl getAnimationControl(){
+        return animationControl;
+    }
+    
+    public void setAnimationControl(AnimControl animationControl){
+        this.animationControl = animationControl;
     }
 }
