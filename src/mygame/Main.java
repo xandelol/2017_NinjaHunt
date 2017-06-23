@@ -15,11 +15,13 @@ import com.jme3.input.controls.KeyTrigger;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
+import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.RenderManager;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.shape.Box;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -46,6 +48,7 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
     private Material boxMatColosion;
     private List<Geometry> cubos;
     private List<NinjaObject> ninjas;
+    private List<Ninja> njs;
     private AudioNode audioSource;
     private long startTime;
     Date afterAddingTenMins;
@@ -57,19 +60,22 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
     private long tempo;
     private boolean pause;
     private final long tt = 10 * 8000;
+    private int dir;
 
     @Override
     public void simpleInitApp() {
         bulletAppState = new BulletAppState();
         stateManager.attach(bulletAppState);
+        dir = 6;
         ninjas = new ArrayList();
+        njs = new ArrayList();
         startTime = System.currentTimeMillis();
         afterAddingTenMins = new Date(startTime + tt);
 
         createLigth();
         createCity();
         
-        initSom();    
+        //initSom();    
         
         boxMatColosion = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md"); 
         boxMatColosion.setBoolean("UseMaterialColors", true);
@@ -86,6 +92,10 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
 
         bulletAppState.setDebugEnabled(true);
         bulletAppState.getPhysicsSpace().addCollisionListener(this);
+        
+        for(Spatial r : rootNode.getChildren()){
+            System.out.println(r.getName());
+        }
     }
 
     @Override
@@ -94,10 +104,14 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
         player.upDateKeys(tpf, up, down, left, right);
         
                 
-        for(NinjaObject n : ninjas){
-            Vector3f position = n.getNinja().getLocalTranslation();
-            position.setZ(position.getZ() + (float) ninjas.size()/10000);
-            n.getNinja().setLocalTranslation(position);
+//        for(NinjaObject n : ninjas){
+//            Vector3f position = n.getNinja().getLocalTranslation();
+//            position.setZ(position.getZ() + (float) ninjas.size()/10000);
+//            n.getNinja().setLocalTranslation(position);
+//        }
+        
+        for(Ninja n : njs){
+            n.updateNinja(tpf);
         }
         
         infoPontos.setText("Pontos: " + pontos);
@@ -216,10 +230,12 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
     private void createNinja(float x, float y, float z) {
         NinjaObject nObj = new NinjaObject();
         Ninja ninja = new Ninja("ninja", assetManager, bulletAppState, x, y, z);
+        ninja.setDir(dir);
         nObj.setNinja(ninja);
         nObj.setChannel(ninja.getAnimationChannel());
         nObj.setControl(ninja.getAnimationControl());
         ninjas.add(nObj);
+        njs.add(ninja);
         rootNode.attachChild(ninja);
     }
     
@@ -227,8 +243,21 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
         assetManager.registerLocator("town.zip", ZipLocator.class);
         Spatial scene = assetManager.loadModel("main.scene");
         scene.setLocalTranslation(0, -5.2f, 0);
+        scene.setName("city");
         rootNode.attachChild(scene);
+        System.out.println("Cidade: "+scene.getName());
 
+        Box boxMesh = new Box(100f,0.1f,100f); 
+        Geometry boxGeo = new Geometry("Box", boxMesh); 
+        Material boxMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        boxMat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);       
+        boxGeo.setMaterial(boxMat); 
+        boxGeo.setLocalTranslation(0, -5.2f, 0);
+        
+        RigidBodyControl boxPhysicsNode = new RigidBodyControl(CollisionShapeFactory.createMeshShape(boxGeo), 0);
+        boxGeo.addControl(boxPhysicsNode);
+        bulletAppState.getPhysicsSpace().add(boxPhysicsNode);
+        
         RigidBodyControl cityPhysicsNode = new RigidBodyControl(CollisionShapeFactory.createMeshShape(scene), 0);
         scene.addControl(cityPhysicsNode);
         bulletAppState.getPhysicsSpace().add(cityPhysicsNode);
@@ -251,28 +280,28 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
     @Override
     public void collision(PhysicsCollisionEvent event) {
 
-        if(event.getNodeA().getName().equals("player") || event.getNodeA().getName().equals("player")){
+        if(event.getNodeA().getName().equals("player") || event.getNodeB().getName().equals("player")){
         
             if(event.getNodeA().getName().equals("ninja")){
                 Spatial s = event.getNodeA();             
                 rootNode.detachChild(s);
                 bulletAppState.getPhysicsSpace().removeAll(s);
+                njs.remove(s);
                 pontos++;
                 if (rootNode.getChild("ninja")==null) {
                     criaNinjas();
                 }
             }
-            else
-            if(event.getNodeB().getName().equals("ninja")){
+            else if(event.getNodeB().getName().equals("ninja")){
                 Spatial s = event.getNodeB();
                 rootNode.detachChild(s);
                 bulletAppState.getPhysicsSpace().removeAll(s);
+                njs.remove(s);
                 pontos++;
                 if (rootNode.getChild("ninja")==null) {
                     criaNinjas();
                 }
-            }
-            
+            }           
         }
         
     }

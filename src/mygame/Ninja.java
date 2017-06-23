@@ -29,19 +29,19 @@ public class Ninja extends Node implements AnimEventListener {
     private Vector3f walkDirection = new Vector3f(0, 0, 0);
     private float airTime;
     private float rot = 0;
+    private int dir;
     
     public Ninja (String name,AssetManager assetManager, BulletAppState bulletAppState, float x, float y, float z){
         super(name);
         rot = y*x*z;
         Node ninja = (Node) assetManager.loadModel("Models/Ninja/Ninja.mesh.xml");
         ninja.setLocalTranslation(x, y, z);
-        rotate(0.0f, -rot, 0.0f);
         scale(0.012f);
         setLocalTranslation(x, y, z);
         
         attachChild(ninja);
         
-        physicsCharacter = new BetterCharacterControl(0f, 2.5f, 16f);
+        physicsCharacter = new BetterCharacterControl(0.5f, 2.5f, 16f);
         addControl(physicsCharacter);
         
         bulletAppState.getPhysicsSpace().add(physicsCharacter);
@@ -64,6 +64,24 @@ public class Ninja extends Node implements AnimEventListener {
 
     public void setWalkDirection(Vector3f walkDirection) {
         this.walkDirection = walkDirection;
+    }
+    
+    public int getDir(){
+        return dir;
+    }
+    
+    public void setDir(int dir){
+        this.dir = dir;
+    }
+    
+    public void updateNinja(float tpf){
+        Vector3f camDir  = getWorldRotation().mult(Vector3f.UNIT_Z);
+       
+        walkDirection.set(0, 0, 0);
+            
+        walkDirection.addLocal(camDir.mult(-dir));
+        
+        physicsCharacter.setWalkDirection(walkDirection);
     }
     
 //    public void simpleUpdate(float tpf) {
