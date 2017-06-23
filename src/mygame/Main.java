@@ -75,7 +75,7 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
         createLigth();
         createCity();
         
-        //initSom();    
+        initSom();    
         
         boxMatColosion = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md"); 
         boxMatColosion.setBoolean("UseMaterialColors", true);
@@ -295,28 +295,7 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
                     criaNinjas();
                 }
             }           
-        }
-        
-        if(event.getNodeA().getName().equals("ninja") || event.getNodeB().getName().equals("ninja")){
-        
-            if(event.getNodeA().getName().equals("city")){
-                System.out.println("Bateu");
-                for(Ninja n : njs){
-                    if (n == event.getNodeA()) {
-                        n.setDir(dir*(-1));
-                    }
-                }
-            }
-            else if(event.getNodeB().getName().equals("city")){
-                System.out.println("Bateu");
-                for(Ninja n : njs){
-                    if (n == event.getNodeB()) {
-                        n.setDir(dir*(-1));
-                    }
-                }
-            }           
-        }
-        
+        }        
     }
         
     public void criaNinjas(){

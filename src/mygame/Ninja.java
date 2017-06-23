@@ -27,6 +27,7 @@ public class Ninja extends Node implements AnimEventListener {
     private AnimControl animationControl;
     private AnimChannel animationChannel;
     private Vector3f walkDirection = new Vector3f(0, 0, 0);
+    private Vector3f viewDirection = new Vector3f(0, 0, 0);
     private float airTime;
     private float rot = 0;
     private int dir;
@@ -66,6 +67,14 @@ public class Ninja extends Node implements AnimEventListener {
         this.walkDirection = walkDirection;
     }
     
+    public Vector3f getViewDirection() {
+        return viewDirection;
+    }
+
+    public void setViewDirection(Vector3f viewDirection) {
+        this.viewDirection = viewDirection;
+    }
+    
     public int getDir(){
         return dir;
     }
@@ -76,20 +85,17 @@ public class Ninja extends Node implements AnimEventListener {
     
     public void updateNinja(float tpf){
         Vector3f camDir  = getWorldRotation().mult(Vector3f.UNIT_Z);
-       
+        viewDirection.set(camDir);
         walkDirection.set(0, 0, 0);
             
         walkDirection.addLocal(camDir.mult(-dir));
         
+        Quaternion rotateL = new Quaternion().fromAngleAxis(-FastMath.PI * (tpf/8), Vector3f.UNIT_Y);
+        rotateL.multLocal(viewDirection);
+        
         physicsCharacter.setWalkDirection(walkDirection);
+        physicsCharacter.setViewDirection(viewDirection);
     }
-    
-//    public void simpleUpdate(float tpf) {
-//        //TODO: add update code
-//        Vector3f position = getLocalTranslation();
-//        position.setZ(position.getZ() + 10/10000);
-//        setLocalTranslation(position);
-//    }
 
     @Override
     public void onAnimCycleDone(AnimControl control, AnimChannel channel, String animName) {
