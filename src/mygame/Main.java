@@ -103,13 +103,6 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
         //TODO: add update code    
         player.upDateKeys(tpf, up, down, left, right);
         
-                
-//        for(NinjaObject n : ninjas){
-//            Vector3f position = n.getNinja().getLocalTranslation();
-//            position.setZ(position.getZ() + (float) ninjas.size()/10000);
-//            n.getNinja().setLocalTranslation(position);
-//        }
-        
         for(Ninja n : njs){
             n.updateNinja(tpf);
         }
@@ -247,7 +240,7 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
         rootNode.attachChild(scene);
         System.out.println("Cidade: "+scene.getName());
 
-        Box boxMesh = new Box(100f,0.1f,100f); 
+        Box boxMesh = new Box(100f,0.5f,100f); 
         Geometry boxGeo = new Geometry("Box", boxMesh); 
         Material boxMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         boxMat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);       
@@ -300,6 +293,26 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
                 pontos++;
                 if (rootNode.getChild("ninja")==null) {
                     criaNinjas();
+                }
+            }           
+        }
+        
+        if(event.getNodeA().getName().equals("ninja") || event.getNodeB().getName().equals("ninja")){
+        
+            if(event.getNodeA().getName().equals("city")){
+                System.out.println("Bateu");
+                for(Ninja n : njs){
+                    if (n == event.getNodeA()) {
+                        n.setDir(dir*(-1));
+                    }
+                }
+            }
+            else if(event.getNodeB().getName().equals("city")){
+                System.out.println("Bateu");
+                for(Ninja n : njs){
+                    if (n == event.getNodeB()) {
+                        n.setDir(dir*(-1));
+                    }
                 }
             }           
         }
