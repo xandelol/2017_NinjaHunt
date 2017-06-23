@@ -1,17 +1,14 @@
 package mygame;
 
-import com.jme3.animation.AnimChannel;
-import com.jme3.animation.AnimControl;
-import com.jme3.animation.AnimEventListener;
 import com.jme3.app.SimpleApplication;
 import com.jme3.asset.plugins.ZipLocator;
-import com.jme3.bounding.BoundingBox;
+import com.jme3.audio.AudioNode;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.PhysicsCollisionEvent;
 import com.jme3.bullet.collision.PhysicsCollisionListener;
-import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
+import com.jme3.font.BitmapText;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
@@ -22,18 +19,18 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.RenderManager;
 import com.jme3.scene.Geometry;
-import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.shape.Box;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 /**
  * This is the Main Class of your Game. You should only do initialization here.
  * Move your Logic into AppStates or Controls
  * @author normenhansen
  */
-public class Main extends SimpleApplication implements ActionListener, PhysicsCollisionListener, AnimEventListener{
+public class Main extends SimpleApplication implements ActionListener, PhysicsCollisionListener{
 
     private static Main app = null;
     
@@ -49,16 +46,30 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
     private Material boxMatColosion;
     private List<Geometry> cubos;
     private List<NinjaObject> ninjas;
+    private AudioNode audioSource;
+    private long startTime;
+    Date afterAddingTenMins;
+    private BitmapText infoPontos;
+    private BitmapText infoTempo;
+    private BitmapText infoObjetivo;
+    private BitmapText fimDeJogo;
+    private int pontos = 0;
+    private long tempo;
+    private boolean pause;
+    private final long tt = 10 * 8000;
 
     @Override
     public void simpleInitApp() {
         bulletAppState = new BulletAppState();
         stateManager.attach(bulletAppState);
         ninjas = new ArrayList();
+        startTime = System.currentTimeMillis();
+        afterAddingTenMins = new Date(startTime + tt);
 
         createLigth();
         createCity();
         
+        initSom();    
         
         boxMatColosion = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md"); 
         boxMatColosion.setBoolean("UseMaterialColors", true);
@@ -70,6 +81,8 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
         initKeys();
         
         criaNinjas();
+        
+        initPlacar();
 
         bulletAppState.setDebugEnabled(true);
         bulletAppState.getPhysicsSpace().addCollisionListener(this);
@@ -85,6 +98,16 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
             Vector3f position = n.getNinja().getLocalTranslation();
             position.setZ(position.getZ() + (float) ninjas.size()/10000);
             n.getNinja().setLocalTranslation(position);
+        }
+        
+        infoPontos.setText("Pontos: " + pontos);
+        infoObjetivo.setText("Objetivo: Capture o máximo de ninjas antes do tempo terminar !");
+        if (tempo()) {
+            fimDeJogo.setText("Parabéns. Você capturou "+ pontos +" ninjas!!! \n PRESSIONE R PARA REINICIAR");
+            guiNode.attachChild(fimDeJogo);
+            pause = true;
+            tempo = 0;
+            bulletAppState.setEnabled(false);
         }
     }
 
@@ -135,6 +158,35 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
                 }
                 break;
         }
+        if (binding.equals("Reset")) {
+            restart();
+            pause = false;
+            pontos = 0;
+            fimDeJogo.setText("");
+            startTime = System.currentTimeMillis();
+            afterAddingTenMins = new Date(startTime + tt);
+
+            rootNode.detachChild(player);
+            for(Spatial r : rootNode.getChildren()){
+                if(r.getName().equals("ninja")){
+                    rootNode.detachChild(r);
+                    bulletAppState.getPhysicsSpace().removeAll(r);
+                }
+            }
+            bulletAppState.getPhysicsSpace().removeAll(player);
+            bulletAppState.setEnabled(true);
+            createPlayer();
+            criaNinjas();
+        }
+        
+        if (binding.equals("Stop")&&value) {
+            pause = !pause;
+            if(pause)
+                bulletAppState.setEnabled(false);
+            else if(!pause)
+                bulletAppState.setEnabled(true);
+        }
+        
     }
     
     private void createLigth() {
@@ -186,11 +238,14 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
         inputManager.addMapping("CharLeft", new KeyTrigger(KeyInput.KEY_A));
         inputManager.addMapping("CharRight", new KeyTrigger(KeyInput.KEY_D));
         inputManager.addMapping("CharForward", new KeyTrigger(KeyInput.KEY_W));
-        inputManager.addMapping("CharBackward", new KeyTrigger(KeyInput.KEY_S));
+        inputManager.addMapping("CharBackward", new KeyTrigger(KeyInput.KEY_S));        
+        inputManager.addMapping("Stop", new KeyTrigger(KeyInput.KEY_P));
+        inputManager.addMapping("Reset", new KeyTrigger(KeyInput.KEY_R));
 
         inputManager.addListener(this, "CharLeft", "CharRight");
         inputManager.addListener(this, "CharForward", "CharBackward");
-
+        inputManager.addListener(this, "Stop");
+        inputManager.addListener(this, "Reset");
     }
     
     @Override
@@ -199,15 +254,23 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
         if(event.getNodeA().getName().equals("player") || event.getNodeA().getName().equals("player")){
         
             if(event.getNodeA().getName().equals("ninja")){
-                  Spatial s = event.getNodeA();             
-                  rootNode.detachChild(s);
-                  bulletAppState.getPhysicsSpace().removeAll(s);
+                Spatial s = event.getNodeA();             
+                rootNode.detachChild(s);
+                bulletAppState.getPhysicsSpace().removeAll(s);
+                pontos++;
+                if (rootNode.getChild("ninja")==null) {
+                    criaNinjas();
+                }
             }
             else
             if(event.getNodeB().getName().equals("ninja")){
-                  Spatial s = event.getNodeB();
-                  rootNode.detachChild(s);
-                  bulletAppState.getPhysicsSpace().removeAll(s);
+                Spatial s = event.getNodeB();
+                rootNode.detachChild(s);
+                bulletAppState.getPhysicsSpace().removeAll(s);
+                pontos++;
+                if (rootNode.getChild("ninja")==null) {
+                    criaNinjas();
+                }
             }
             
         }
@@ -221,13 +284,56 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
         }
     }
 
-    @Override
-    public void onAnimCycleDone(AnimControl control, AnimChannel channel, String animName) {
-        //
+    private void initSom() {
+        audioSource = new AudioNode(assetManager, "Sounds/som.wav", false);
+        audioSource.setLooping(false);
+        audioSource.setPositional(false);
+        audioSource.setVolume(0.5f);
+        audioSource.playInstance();
     }
+    
+    private void initPlacar() {
 
-    @Override
-    public void onAnimChange(AnimControl control, AnimChannel channel, String animName) {
-        //
+        guiNode.detachAllChildren();
+        guiFont = assetManager.loadFont("Interface/Fonts/Default.fnt");
+
+        infoPontos = new BitmapText(guiFont, false);
+        infoPontos.setSize(guiFont.getCharSet().getRenderedSize());
+        infoPontos.setLocalTranslation(0, settings.getHeight() - 60, 0);
+        guiNode.attachChild(infoPontos);
+
+        infoTempo = new BitmapText(guiFont, false);
+        infoTempo.setSize(guiFont.getCharSet().getRenderedSize());
+        infoTempo.setLocalTranslation(0, settings.getHeight() - 80, 0);
+        guiNode.attachChild(infoTempo);
+
+        infoObjetivo = new BitmapText(guiFont, false);
+        infoObjetivo.setSize(guiFont.getCharSet().getRenderedSize());
+        infoObjetivo.setLocalTranslation(0, settings.getHeight() - 20, 0);
+        guiNode.attachChild(infoObjetivo);
+
+        fimDeJogo = new BitmapText(guiFont, false);
+        fimDeJogo.setSize(guiFont.getCharSet().getRenderedSize());
+
+        fimDeJogo.setLocalTranslation( // center
+                (settings.getWidth() / 2) - (guiFont.getCharSet().getRenderedSize() * (fimDeJogo.getText().length() / 3)),
+                settings.getHeight() / 2 + fimDeJogo.getLineHeight() / 2 - 100, 0);
+
+    }
+    
+    public boolean tempo() {
+        
+        tempo = System.currentTimeMillis();
+        long differenceTime = afterAddingTenMins.getTime() - tempo;
+        if (differenceTime >= 0) {
+            infoTempo.setText("Tempo restante: " + TimeUnit.MILLISECONDS.toSeconds(differenceTime) + " sec");
+        }
+
+        if (TimeUnit.MILLISECONDS.toSeconds(differenceTime) == 0) {
+            return true;
+
+        } else {
+            return false;
+        }
     }
 }
