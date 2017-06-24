@@ -46,7 +46,6 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
     private PlayerCameraNode player;
     private boolean up = false, down = false, left = false, right = false;
     private Material boxMatColosion;
-    private List<Geometry> cubos;
     private List<NinjaObject> ninjas;
     private List<Ninja> njs;
     private AudioNode audioSource;
@@ -60,13 +59,11 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
     private long tempo;
     private boolean pause;
     private final long tt = 10 * 8000;
-    private int dir;
 
     @Override
     public void simpleInitApp() {
         bulletAppState = new BulletAppState();
         stateManager.attach(bulletAppState);
-        dir = 6;
         ninjas = new ArrayList();
         njs = new ArrayList();
         startTime = System.currentTimeMillis();
@@ -90,7 +87,7 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
         
         initPlacar();
 
-        bulletAppState.setDebugEnabled(true);
+        bulletAppState.setDebugEnabled(false);
         bulletAppState.getPhysicsSpace().addCollisionListener(this);
         
         for(Spatial r : rootNode.getChildren()){
@@ -223,7 +220,6 @@ public class Main extends SimpleApplication implements ActionListener, PhysicsCo
     private void createNinja(float x, float y, float z) {
         NinjaObject nObj = new NinjaObject();
         Ninja ninja = new Ninja("ninja", assetManager, bulletAppState, x, y, z);
-        ninja.setDir(dir);
         nObj.setNinja(ninja);
         nObj.setChannel(ninja.getAnimationChannel());
         nObj.setControl(ninja.getAnimationControl());

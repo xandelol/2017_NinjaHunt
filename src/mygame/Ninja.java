@@ -88,9 +88,9 @@ public class Ninja extends Node implements AnimEventListener {
         viewDirection.set(camDir);
         walkDirection.set(0, 0, 0);
             
-        walkDirection.addLocal(camDir.mult(-dir));
+        walkDirection.addLocal(camDir.mult(-6));
         
-        Quaternion rotateL = new Quaternion().fromAngleAxis(-FastMath.PI * (tpf/8), Vector3f.UNIT_Y);
+        Quaternion rotateL = new Quaternion().fromAngleAxis(-FastMath.PI * (tpf/6), Vector3f.UNIT_Y);
         rotateL.multLocal(viewDirection);
         
         physicsCharacter.setWalkDirection(walkDirection);
